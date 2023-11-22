@@ -37,7 +37,7 @@ public:
 
     void addSecurities(const string &stackLabel, int code, const string &name, const string &company, int count, float price)
     {
-        for (int i = 0; i < stockAreas.size(); i++)
+        for (int i = 0; i < stockAreas.size(); ++i)
         {
             if (stockAreas[i].label == stackLabel)
             {
@@ -59,11 +59,11 @@ public:
 
     void displaySecurities(const string &stackLabel)
     {
-        for (auto &area : stockAreas)
+        for (int i = 0; i < stockAreas.size(); ++i)
         {
-            if (area.label == stackLabel)
+            if (stockAreas[i].label == stackLabel)
             {
-                stack<Item> tempStack = area.items;
+                stack<Item> tempStack = stockAreas[i].items;
                 if (tempStack.empty())
                 {
                     cout << "No items in the stack: " << stackLabel << endl;
@@ -84,21 +84,50 @@ public:
         cout << "No stack available with label: " << stackLabel << endl;
     }
 
-    void updateSecurities(const string &stackLabel, int code)
+    void checkSpecificSecurities(const string &stackLabel, int code)
     {
-        for (auto &area : stockAreas)
+        for (int i = 0; i < stockAreas.size(); ++i)
         {
-            if (area.label == stackLabel)
+            if (stockAreas[i].label == stackLabel)
             {
-                stack<Item> &currentStack = area.items;
+                stack<Item> tempStack = stockAreas[i].items;
                 bool found = false;
-
-                stack<Item> tempStack = currentStack;
                 while (!tempStack.empty())
                 {
                     Item item = tempStack.top();
                     tempStack.pop();
+                    if (item.itemCode == code)
+                    {
+                        cout << "Item found in stack: " << stackLabel << endl;
+                        cout << "Item Code: " << item.itemCode << ", Item Name: " << item.itemName << ", Company: " << item.companyName << ", No. of Items: " << item.numberOfItems << ", Price per unit: " << item.price_unit << ", Total Amount of Stock: " << item.total_price << endl;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    cout << "Item not found in stack: " << stackLabel << endl;
+                }
+                return;
+            }
+        }
+        cout << "No stack available with label: " << stackLabel << endl;
+    }
 
+    void updateSecurities(const string &stackLabel, int code)
+    {
+        for (int i = 0; i < stockAreas.size(); ++i)
+        {
+            if (stockAreas[i].label == stackLabel)
+            {
+                stack<Item> &tempStack = stockAreas[i].items;
+                stack<Item> updatedStack;
+                bool found = false;
+
+                while (!tempStack.empty())
+                {
+                    Item item = tempStack.top();
+                    tempStack.pop();
                     if (item.itemCode == code)
                     {
                         cout << "Enter new details for the item:" << endl;
@@ -113,10 +142,18 @@ public:
                         item.price_unit = newPrice;
                         item.total_price = newCount * newPrice;
 
-                        currentStack.push(item);
+                        updatedStack.push(item);
                         found = true;
-                        break;
                     }
+                    else
+                    {
+                        updatedStack.push(item);
+                    }
+                }
+                while (!updatedStack.empty())
+                {
+                    tempStack.push(updatedStack.top());
+                    updatedStack.pop();
                 }
 
                 if (found)
@@ -125,7 +162,7 @@ public:
                 }
                 else
                 {
-                    cout << "Item not found in the stack: " << stackLabel << endl;
+                    cout << "Item not found in stack: " << stackLabel << endl;
                 }
                 return;
             }
@@ -133,65 +170,40 @@ public:
         cout << "No stack available with label: " << stackLabel << endl;
     }
 
-    // The sellSecurities function will have a similar structure to updateSecurities but for selling instead of updating.
-
     void sellSecurities(const string &stackLabel, int code)
     {
-        for (auto &area : stockAreas)
+        for (int i = 0; i < stockAreas.size(); ++i)
         {
-            if (area.label == stackLabel)
+            if (stockAreas[i].label == stackLabel)
             {
-                stack<Item> &currentStack = area.items;
+                stack<Item> &tempStack = stockAreas[i].items;
+                stack<Item> updatedStack;
                 bool found = false;
-
-                stack<Item> tempStack;
-
-                while (!currentStack.empty())
-                {
-                    Item &item = currentStack.top();
-                    currentStack.pop();
-
-                    if (item.itemCode == code)
-                    {
-                        cout << "Enter Item Name: ";
-                        string newName;
-                        cin >> newName;
-                        cout << "Enter Company Name: ";
-                        string newCompany;
-                        cin >> newCompany;
-                        cout << "Enter Number of Items: ";
-                        int newCount;
-                        cin >> newCount;
-                        cout << "Enter latest Value: ";
-                        float newprice;
-                        cin >> newprice;
-
-                        float newtotal = newCount * newprice;
-
-                        item.itemName = newName;
-                        item.companyName = newCompany;
-                        item.numberOfItems = newCount;
-                        item.price_unit = newprice;
-                        item.total_price = newtotal;
-                        found = true;
-                    }
-
-                    tempStack.push(item);
-                }
 
                 while (!tempStack.empty())
                 {
-                    currentStack.push(tempStack.top());
+                    Item item = tempStack.top();
                     tempStack.pop();
+                    if (item.itemCode == code)
+                    {
+                        found = true;
+                        cout << "Item sold from stack: " << stackLabel << endl;
+                    }
+                    else
+                    {
+                        updatedStack.push(item);
+                    }
                 }
 
-                if (found)
+                while (!updatedStack.empty())
                 {
-                    cout << "Item updated successfully in the stack: " << stackLabel << endl;
+                    tempStack.push(updatedStack.top());
+                    updatedStack.pop();
                 }
-                else
+
+                if (!found)
                 {
-                    cout << "Item not found in the stack: " << stackLabel << endl;
+                    cout << "Item not found in stack: " << stackLabel << endl;
                 }
                 return;
             }
@@ -202,6 +214,8 @@ public:
 
 int main()
 {
+    system("color 0A");
+
     StockPortfolio portfolio;
 
     while (true)
@@ -209,9 +223,10 @@ int main()
         cout << "\n1. Create New Stack (Area of Stock)" << endl;
         cout << "2. Add Securities" << endl;
         cout << "3. Display Securities" << endl;
-        cout << "4. Update Securities" << endl;
-        cout << "5. Sell Securities" << endl;
-        cout << "6. Exit" << endl;
+        cout << "4. Check Specific Securities" << endl;
+        cout << "5. Update Securities" << endl;
+        cout << "6. Sell Securities" << endl;
+        cout << "7. Exit" << endl;
 
         int choice;
         cout << "\nYour Choice: ";
@@ -259,6 +274,17 @@ int main()
         case 4:
         {
             string stackLabel;
+            cout << "Enter the label of the stack to check specific securities: ";
+            cin >> stackLabel;
+            int code;
+            cout << "Enter Item Code to Check: ";
+            cin >> code;
+            portfolio.checkSpecificSecurities(stackLabel, code);
+            break;
+        }
+        case 5:
+        {
+            string stackLabel;
             cout << "Enter the label of the stack to update securities: ";
             cin >> stackLabel;
             int code;
@@ -267,7 +293,7 @@ int main()
             portfolio.updateSecurities(stackLabel, code);
             break;
         }
-        case 5:
+        case 6:
         {
             string stackLabel;
             cout << "Enter the label of the stack to sell securities: ";
@@ -278,7 +304,7 @@ int main()
             portfolio.sellSecurities(stackLabel, code);
             break;
         }
-        case 6:
+        case 7:
             exit(0);
         default:
             cout << "Invalid Value. Please try again." << endl;
